@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { MOCK_APPLICATIONS, MOCK_VACANCIES } from '../../data/mockRecruitmentData';
-import { DashboardLayout } from '../../components/layout/DashboardLayout';
+
 
 export const ApplicantDashboard: React.FC = () => {
   const { currentUser } = useAuth();
@@ -34,7 +34,7 @@ export const ApplicantDashboard: React.FC = () => {
   ];
 
   return (
-    <DashboardLayout>
+    <>
       {/* 1. Header & Welcome Area with Instructions */}
       <div className="mb-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
@@ -460,6 +460,6 @@ export const ApplicantDashboard: React.FC = () => {
           </div>
         </div>
       )}
-    </DashboardLayout>
+    </>
   );
 };

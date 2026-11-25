@@ -85,6 +85,51 @@ export const MOCK_VACANCIES: JobVacancy[] = [
     status: 'PUBLISHED',
     createdAt: '2026-11-10',
   },
+  {
+    id: 'vac-4',
+    jobCode: 'CEB-REC-2026-004',
+    title: 'Accountant (Financial Management & Audit)',
+    department: 'Finance Division',
+    location: 'Head Office, Colombo 02',
+    employmentType: 'Permanent',
+    vacanciesCount: 2,
+    closingDate: '2026-12-28',
+    description:
+      'Oversee financial reporting, capital project budgeting, tariff cost analysis, and statutory audit coordination across regional divisions.',
+    qualifications: [
+      'Associate Member of CA Sri Lanka, CIMA, or ACCA',
+      'B.Sc. in Accountancy / Financial Management from a recognized university',
+      'Minimum 3 years post-qualifying experience in a large public or corporate entity',
+    ],
+    requirements: [
+      'Proficiency in ERP accounting modules and Sri Lanka Accounting Standards (LKAS/SLFRS)',
+      'Strong analytical and regulatory compliance reporting skills',
+    ],
+    status: 'PUBLISHED',
+    createdAt: '2026-11-12',
+  },
+  {
+    id: 'vac-5',
+    jobCode: 'CEB-REC-2026-005',
+    title: 'Electrical Superintendent (Distribution Operations)',
+    department: 'Distribution Division',
+    location: 'Kandy & Central Province Regions',
+    employmentType: 'Contract',
+    vacanciesCount: 6,
+    closingDate: '2026-12-30',
+    description:
+      'Coordinate 33kV/11kV distribution network maintenance, breakdown restoration teams, and new consumer service connections.',
+    qualifications: [
+      'National Diploma in Technology (NDT) or HNDE in Electrical Engineering',
+      'Minimum 3 years hands-on experience in medium/low voltage distribution networks',
+    ],
+    requirements: [
+      'Strong field leadership and safety compliance awareness (CEB Safety Manual)',
+      'Willingness to participate in emergency breakdown restoration rosters',
+    ],
+    status: 'PUBLISHED',
+    createdAt: '2026-11-15',
+  },
 ];
 
 export const MOCK_APPLICATIONS: ApplicantApplication[] = [
