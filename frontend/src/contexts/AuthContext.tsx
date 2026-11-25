@@ -13,7 +13,7 @@ export interface MockAccount {
 
 export const MOCK_ACCOUNTS: MockAccount[] = [
   {
-    name: 'Kasun Bandara',
+    name: 'Chamalka Ekanayaka',
     email: 'applicant@ceb.lk',
     role: 'APPLICANT',
     roleLabel: 'Job Applicant',

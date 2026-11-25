@@ -170,7 +170,7 @@ export const MOCK_APPLICATIONS: ApplicantApplication[] = [
     statusRemark:
       'Documents verified by preliminary scrutiny committee; awaiting technical eligibility scoring.',
     currentStepIndex: 1,
-    documentsSubmitted: ['CV_Kasun_Bandara_2026.pdf', 'Degree_Certificate_IESL.pdf', 'NIC_Copy.pdf'],
+    documentsSubmitted: ['CV_Chamalka_Ekanayaka_2026.pdf', 'Degree_Certificate_IESL.pdf', 'NIC_Copy.pdf'],
     timeline: [
       {
         id: 'tl-101-1',
@@ -204,7 +204,7 @@ export const MOCK_APPLICATIONS: ApplicantApplication[] = [
     statusRemark:
       'Shortlisted for Written Aptitude & Practical Evaluation scheduled for 10th Dec 2026.',
     currentStepIndex: 2,
-    documentsSubmitted: ['CV_Kasun_Bandara_2026.pdf', 'CCNA_Certificate.pdf', 'Degree_Transcript.pdf'],
+    documentsSubmitted: ['CV_Chamalka_Ekanayaka_2026.pdf', 'CCNA_Certificate.pdf', 'Degree_Transcript.pdf'],
     callLetter: {
       type: 'Written Aptitude & Practical Evaluation',
       date: '2026-12-10',
@@ -257,7 +257,7 @@ export const MOCK_APPLICATIONS: ApplicantApplication[] = [
     statusRemark:
       'Please upload a JP-certified copy of your B.Sc. Civil Engineering Degree Certificate (current scan is unclear).',
     currentStepIndex: 1,
-    documentsSubmitted: ['CV_Kasun_Bandara_2026.pdf', 'Civil_Degree_Scan.pdf', 'NIC_Copy.pdf'],
+    documentsSubmitted: ['CV_Chamalka_Ekanayaka_2026.pdf', 'Civil_Degree_Scan.pdf', 'NIC_Copy.pdf'],
     requestedDocLabel: 'Certified B.Sc. Civil Engineering Degree Certificate (PDF)',
     requestedInfoNote:
       'The uploaded degree scan lacks the Justice of the Peace (JP) certification seal. Please upload a clear certified true copy before 2026-12-05 to proceed to eligibility scoring.',
@@ -303,7 +303,7 @@ export const MOCK_APPLICATIONS: ApplicantApplication[] = [
       'Director Board approved final appointment recommendation. Official offer letter dispatched via registered post and email.',
     currentStepIndex: 4,
     documentsSubmitted: [
-      'CV_Kasun_Bandara_2026.pdf',
+      'CV_Chamalka_Ekanayaka_2026.pdf',
       'CA_Sri_Lanka_Membership.pdf',
       'Service_Letters.pdf',
     ],
@@ -343,3 +343,138 @@ export const MOCK_APPLICATIONS: ApplicantApplication[] = [
     ],
   },
 ];
+
+export interface EducationEntry {
+  id: string;
+  title: string;
+  institution: string;
+  fieldOfStudy: string;
+  completionYear: string;
+  gradeOrClass: string;
+  professionalBody?: string;
+}
+
+export interface WorkExperienceEntry {
+  id: string;
+  role: string;
+  organization: string;
+  startDate: string;
+  endDate: string;
+  currentlyWorking: boolean;
+  responsibilities: string;
+}
+
+export interface VaultDocument {
+  id: string;
+  label: string;
+  description: string;
+  required: boolean;
+  fileName?: string;
+  uploadedDate?: string;
+  fileSize?: string;
+}
+
+export interface CandidateProfile {
+  fullName: string;
+  nic: string;
+  dob: string;
+  gender: 'Male' | 'Female' | 'Prefer not to say';
+  email: string;
+  phone: string;
+  address: string;
+  district: string;
+  province: string;
+  bio: string;
+  education: EducationEntry[];
+  experience: WorkExperienceEntry[];
+  documents: VaultDocument[];
+}
+
+export const MOCK_CANDIDATE_PROFILE: CandidateProfile = {
+  fullName: 'Chamalka Ekanayaka',
+  nic: '199724501892',
+  dob: '1997-09-02',
+  gender: 'Female',
+  email: 'applicant@ceb.lk',
+  phone: '+94 77 458 9210',
+  address: 'No. 48/B, Temple Road, Maharagama',
+  district: 'Colombo',
+  province: 'Western Province',
+  bio: 'B.Sc. Electrical Engineering graduate and IESL Associate Member with 3+ years of hands-on experience in HV/MV power system analysis, substation protection testing, and smart grid telemetry.',
+  education: [
+    {
+      id: 'edu-1',
+      title: 'B.Sc. Engineering (Hons) in Electrical Engineering',
+      institution: 'University of Moratuwa',
+      fieldOfStudy: 'Power Systems & High Voltage Engineering',
+      completionYear: '2021',
+      gradeOrClass: 'Second Class Upper Division',
+      professionalBody: 'IESL Associate Member (AMIE-SL)',
+    },
+    {
+      id: 'edu-2',
+      title: 'G.C.E. Advanced Level (Physical Science Stream)',
+      institution: 'Visakha Vidyalaya, Colombo 05',
+      fieldOfStudy: 'Combined Mathematics, Physics, Chemistry',
+      completionYear: '2016',
+      gradeOrClass: '3 A Passes (Z-Score: 2.14)',
+    },
+  ],
+  experience: [
+    {
+      id: 'exp-1',
+      role: 'Electrical Project Engineer',
+      organization: 'Lanka Grid Solutions (Pvt) Ltd',
+      startDate: '2023-03',
+      endDate: '',
+      currentlyWorking: true,
+      responsibilities:
+        'Lead 33kV/132kV substation protection relay coordination, PSS/E load flow modeling, and commissioning inspections.',
+    },
+    {
+      id: 'exp-2',
+      role: 'Junior Maintenance Engineer (Trainee)',
+      organization: 'Ceylon Electricity Board — Transmission Planning Branch',
+      startDate: '2021-08',
+      endDate: '2023-02',
+      currentlyWorking: false,
+      responsibilities:
+        'Assisted senior engineers in grid expansion feasibility studies, transformer testing, and SCADA fault log analysis.',
+    },
+  ],
+  documents: [
+    {
+      id: 'doc-cv',
+      label: 'Primary Curriculum Vitae (CV)',
+      description: 'Updated professional resume in PDF format (< 5MB)',
+      required: true,
+      fileName: 'CV_Chamalka_Ekanayaka_2026.pdf',
+      uploadedDate: '2026-11-10',
+      fileSize: '1.2 MB',
+    },
+    {
+      id: 'doc-nic',
+      label: 'Certified National Identity Card (NIC)',
+      description: 'Front & back scan certified by a JP or Attorney-at-Law',
+      required: true,
+      fileName: 'NIC_Certified_Copy.pdf',
+      uploadedDate: '2026-11-10',
+      fileSize: '640 KB',
+    },
+    {
+      id: 'doc-degree',
+      label: 'Degree / Diploma Certificate(s)',
+      description: 'Certified true copy of highest academic/technical qualification',
+      required: true,
+      fileName: 'Degree_Certificate_IESL.pdf',
+      uploadedDate: '2026-11-11',
+      fileSize: '2.1 MB',
+    },
+    {
+      id: 'doc-birth',
+      label: 'Birth Certificate / Service Letters',
+      description: 'Certified copy of Birth Certificate and past employer letters',
+      required: false,
+    },
+  ],
+};

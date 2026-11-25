@@ -40,7 +40,7 @@ export const ExploreVacanciesPage: React.FC = () => {
   // Simple Application form state
   const [qualificationSummary, setQualificationSummary] = useState('');
   const [experienceYears, setExperienceYears] = useState('2');
-  const [uploadedCvName, setUploadedCvName] = useState('CV_Kasun_Bandara_2026.pdf');
+  const [uploadedCvName, setUploadedCvName] = useState('CV_Chamalka_Ekanayaka_2026.pdf');
   const [extraDocName, setExtraDocName] = useState('');
   const [agreed, setAgreed] = useState(true);
 
@@ -362,7 +362,7 @@ export const ExploreVacanciesPage: React.FC = () => {
                   <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                     <div>
                       <span className="text-slate-400 block">Applicant Name</span>
-                      <strong className="text-slate-800">{currentUser?.name || 'Kasun Bandara'}</strong>
+                      <strong className="text-slate-800">{currentUser?.name || 'Chamalka Ekanayaka'}</strong>
                     </div>
                     <div>
                       <span className="text-slate-400 block">Registered Email</span>
