@@ -3,7 +3,9 @@ import { AuthProvider } from './contexts/AuthContext';
 import { LoginPage } from './pages/public/LoginPage';
 import { RegisterPage } from './pages/public/RegisterPage';
 import { ApplicantDashboard } from './pages/applicant/ApplicantDashboard';
+import { ExploreVacanciesPage } from './pages/applicant/ExploreVacanciesPage';
 import { PlaceholderDashboard } from './components/PlaceholderDashboard';
+import { DashboardLayout } from './components/layout/DashboardLayout';
 
 function App() {
   return (
@@ -14,11 +16,14 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
 
-          {/* Applicant Portal */}
-          <Route path="/applicant/dashboard" element={<ApplicantDashboard />} />
-          <Route path="/applicant/vacancies" element={<ApplicantDashboard />} />
-          <Route path="/applicant/applications" element={<ApplicantDashboard />} />
-          <Route path="/applicant/profile" element={<ApplicantDashboard />} />
+          {/* Applicant Portal — persistent DashboardLayout via Outlet */}
+          <Route element={<DashboardLayout />}>
+            <Route path="/applicant/dashboard" element={<ApplicantDashboard />} />
+            <Route path="/applicant/vacancies" element={<ExploreVacanciesPage />} />
+            <Route path="/applicant/applications" element={<ApplicantDashboard />} />
+            <Route path="/applicant/profile" element={<ApplicantDashboard />} />
+          </Route>
+
           <Route
             path="/hr/dashboard"
             element={
