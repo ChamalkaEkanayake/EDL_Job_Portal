@@ -4,6 +4,7 @@ import { LoginPage } from './pages/public/LoginPage';
 import { RegisterPage } from './pages/public/RegisterPage';
 import { ApplicantDashboard } from './pages/applicant/ApplicantDashboard';
 import { ExploreVacanciesPage } from './pages/applicant/ExploreVacanciesPage';
+import { MyApplicationsPage } from './pages/applicant/MyApplicationsPage';
 import { PlaceholderDashboard } from './components/PlaceholderDashboard';
 import { DashboardLayout } from './components/layout/DashboardLayout';
 
@@ -20,7 +21,7 @@ function App() {
           <Route element={<DashboardLayout />}>
             <Route path="/applicant/dashboard" element={<ApplicantDashboard />} />
             <Route path="/applicant/vacancies" element={<ExploreVacanciesPage />} />
-            <Route path="/applicant/applications" element={<ApplicantDashboard />} />
+            <Route path="/applicant/applications" element={<MyApplicationsPage />} />
             <Route path="/applicant/profile" element={<ApplicantDashboard />} />
           </Route>
 
