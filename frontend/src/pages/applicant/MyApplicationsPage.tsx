@@ -847,7 +847,7 @@ export const MyApplicationsPage: React.FC = () => {
                 <div>
                   <span className="text-slate-400 block text-[11px]">Candidate Name</span>
                   <span className="font-bold text-slate-900">
-                    {currentUser?.name || 'Kasun Bandara'}
+                    {currentUser?.name || 'Chamalka Ekanayaka'}
                   </span>
                 </div>
                 <div>
