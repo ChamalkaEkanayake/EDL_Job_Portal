@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider } from './contexts/AuthContext';
 import { LoginPage } from './pages/public/LoginPage';
 import { RegisterPage } from './pages/public/RegisterPage';
+import { ApplicantDashboard } from './pages/applicant/ApplicantDashboard';
 import { PlaceholderDashboard } from './components/PlaceholderDashboard';
 
 function App() {
@@ -13,17 +14,11 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
 
-          {/* Placeholders for 4 Role Dashboards (to be implemented next) */}
-          <Route
-            path="/applicant/dashboard"
-            element={
-              <PlaceholderDashboard
-                title="Applicant Portal & Dashboard"
-                subtitle="Here the applicant can browse vacancies, submit applications, upload CVs, and track application progress."
-                roleTag="Applicant View"
-              />
-            }
-          />
+          {/* Applicant Portal */}
+          <Route path="/applicant/dashboard" element={<ApplicantDashboard />} />
+          <Route path="/applicant/vacancies" element={<ApplicantDashboard />} />
+          <Route path="/applicant/applications" element={<ApplicantDashboard />} />
+          <Route path="/applicant/profile" element={<ApplicantDashboard />} />
           <Route
             path="/hr/dashboard"
             element={
