@@ -82,7 +82,7 @@ export const LoginPage: React.FC = () => {
         default:
           navigate('/applicant/dashboard');
       }
-    }, 500);
+    }, 450);
   };
 
   const handleQuickFill = (accEmail: string) => {
@@ -93,7 +93,7 @@ export const LoginPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col justify-between selection:bg-sky-500 selection:text-white">
-      {/* Top Simple Header */}
+      {/* Top Header */}
       <header className="bg-white border-b border-slate-200 px-6 sm:px-10 py-3.5 flex items-center justify-between shadow-xs">
         <div className="flex items-center gap-3">
           <CebJobPortalLogo size="md" />
@@ -105,16 +105,16 @@ export const LoginPage: React.FC = () => {
             className="inline-flex items-center gap-1.5 text-xs font-semibold px-4 py-2 rounded-lg border border-[#f59e0b] text-[#d97706] hover:bg-amber-50 transition shadow-xs"
           >
             <UserPlus className="w-4 h-4" />
-            Register
+            Register (18+)
           </Link>
         </div>
       </header>
 
-      {/* Main Login Body */}
+      {/* Main Login Body: 2-Column Presentation + Form Layout */}
       <main className="flex-1 flex items-center justify-center p-4 sm:p-6 my-auto">
         <div className="w-full max-w-4xl bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden grid grid-cols-1 md:grid-cols-12">
           
-          {/* Left Side: Clean Job Portal Presentation */}
+          {/* Left Side: CEB Careers Presentation & Description */}
           <div className="md:col-span-5 bg-gradient-to-br from-[#0c2b4d] to-[#04172a] text-white p-8 flex flex-col justify-between relative overflow-hidden">
             <div className="relative z-10">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-500/20 text-sky-300 text-xs font-medium border border-sky-400/30 mb-6">
@@ -128,21 +128,21 @@ export const LoginPage: React.FC = () => {
               </h2>
 
               <p className="mt-3 text-xs text-slate-300 leading-relaxed">
-                Welcome to Ceylon Electricity Board Recruitment Portal. Discover career opportunities across engineering, technical services, finance, and administration.
+                Welcome to the Ceylon Electricity Board Recruitment Portal. Discover career opportunities across engineering, technical services, finance, and administration.
               </p>
 
               <div className="mt-8 space-y-3 border-t border-slate-700/60 pt-6">
                 <div className="flex items-start gap-2.5 text-xs text-slate-300">
                   <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                  <span>Direct vacancy applications & real-time progress tracking</span>
+                  <span>Direct vacancy applications & real-time status tracking</span>
                 </div>
                 <div className="flex items-start gap-2.5 text-xs text-slate-300">
                   <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                  <span>Centralized internal review for HR & Director Board</span>
+                  <span>Transparent multi-level evaluation by HR & Director Board</span>
                 </div>
                 <div className="flex items-start gap-2.5 text-xs text-slate-300">
                   <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                  <span>Secure digital document submission</span>
+                  <span>Official digital document submission (Ages 18+)</span>
                 </div>
               </div>
             </div>
@@ -155,7 +155,7 @@ export const LoginPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Right Side: Clean Simple Login Form */}
+          {/* Right Side: Clean Login Form + Quick Demo Logins */}
           <div className="md:col-span-7 p-6 sm:p-10 flex flex-col justify-center">
             <div className="mb-6">
               <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Portal Login</h1>
@@ -226,7 +226,7 @@ export const LoginPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Single Main Login Button */}
+              {/* Main Login Button */}
               <button
                 type="submit"
                 disabled={isLoading}
@@ -242,7 +242,7 @@ export const LoginPage: React.FC = () => {
                 )}
               </button>
 
-              {/* Register Callout for New Candidates */}
+              {/* Register Callout */}
               <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
                 <span className="text-slate-500">Don't have an account yet?</span>
                 <Link
@@ -265,7 +265,7 @@ export const LoginPage: React.FC = () => {
                     key={acc.role}
                     type="button"
                     onClick={() => handleQuickFill(acc.email)}
-                    className="text-left p-2 rounded-lg border border-slate-200 hover:border-sky-400 bg-slate-50/60 hover:bg-sky-50/50 text-[11px] transition flex items-center justify-between"
+                    className="text-left p-2 rounded-lg border border-slate-200 hover:border-sky-400 bg-slate-50/60 hover:bg-sky-50/50 text-[11px] transition flex items-center justify-between cursor-pointer"
                   >
                     <span className="font-medium text-slate-700 truncate">{acc.roleLabel.split('/')[0]}</span>
                     <span className="text-[9px] px-1.5 py-0.5 rounded bg-slate-200 text-slate-600 font-bold">
