@@ -8,6 +8,7 @@ import { MyApplicationsPage } from './pages/applicant/MyApplicationsPage';
 import { CandidateProfilePage } from './pages/applicant/CandidateProfilePage';
 import { PlaceholderDashboard } from './components/PlaceholderDashboard';
 import { DashboardLayout } from './components/layout/DashboardLayout';
+import { AdminDashboard } from './pages/admin/AdminDashboard';
 
 function App() {
   return (
@@ -46,12 +47,27 @@ function App() {
               />
             }
           />
+          {/* Admin Portal — persistent DashboardLayout via Outlet */}
+          <Route element={<DashboardLayout />}>
+            <Route path="/admin/dashboard" element={<AdminDashboard />} />
+          </Route>
+
           <Route
-            path="/admin/dashboard"
+            path="/admin/users"
             element={
               <PlaceholderDashboard
-                title="System Administration & Audit Console"
-                subtitle="Manage user accounts, assign role permissions, configure departments, and review audit logs."
+                title="User & Role Management"
+                subtitle="Manage internal HR/Director Board accounts, role permissions, and applicant account status."
+                roleTag="System Admin View"
+              />
+            }
+          />
+          <Route
+            path="/admin/departments"
+            element={
+              <PlaceholderDashboard
+                title="Department & System Settings"
+                subtitle="Configure CEB engineering/corporate divisions and global recruitment portal policies."
                 roleTag="System Admin View"
               />
             }
