@@ -21,12 +21,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { MOCK_APPLICATIONS, MOCK_VACANCIES } from '../../data/mockRecruitmentData';
-<<<<<<< Updated upstream
-
-=======
-import { DashboardLayout } from '../../components/layout/DashboardLayout';
 import type { JobVacancy } from '../../types';
->>>>>>> Stashed changes
 
 export const ApplicantDashboard: React.FC = () => {
   const { currentUser } = useAuth();
@@ -128,18 +123,10 @@ export const ApplicantDashboard: React.FC = () => {
   ];
 
   return (
-<<<<<<< Updated upstream
     <>
-      {/* 1. Header & Welcome Area with Instructions */}
-      <div className="mb-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-=======
-    <DashboardLayout>
       <div className="space-y-6 max-w-7xl mx-auto pb-12">
-        
         {/* 1. Header & Welcome Area */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
->>>>>>> Stashed changes
           <div>
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
               Welcome back, {currentUser?.name || 'Applicant'}!
