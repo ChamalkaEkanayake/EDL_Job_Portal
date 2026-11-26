@@ -13,10 +13,12 @@ import {
   Shield,
   HelpCircle,
   LayoutDashboard,
+  AlertTriangle,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { CebJobPortalLogo } from '../common/CebJobPortalLogo';
 import { NotificationModal } from './NotificationModal';
+import { getPortalSettings, getSystemUsers } from '../../utils/portalStorage';
 import type { UserRole } from '../../types';
 
 interface NavItem {
@@ -147,6 +149,50 @@ export const DashboardLayout: React.FC<{ children?: React.ReactNode }> = ({ chil
   };
 
   const navItems = getNavItems(currentUser?.role);
+
+  // Live Cross-Portal Enforcement: Maintenance Mode & Suspended Account checks
+  const portalSettings = getPortalSettings();
+  const matchedLiveUser = currentUser?.email
+    ? getSystemUsers().find((u) => u.email.toLowerCase() === currentUser.email.toLowerCase())
+    : undefined;
+  const isSuspendedSession = matchedLiveUser?.status === 'Suspended';
+  const isBlockedByMaintenance =
+    portalSettings.maintenanceMode && currentUser?.role !== 'ADMIN';
+
+  if (isSuspendedSession || isBlockedByMaintenance) {
+    return (
+      <div className="min-h-screen bg-[#f8fafc] flex flex-col items-center justify-center p-6">
+        <div className="max-w-md w-full bg-white rounded-3xl border border-slate-200 shadow-sm p-8 text-center space-y-4">
+          <div className="mx-auto flex justify-center">
+            <CebJobPortalLogo size="md" />
+          </div>
+          <div
+            className={`w-12 h-12 rounded-2xl mx-auto flex items-center justify-center ${
+              isSuspendedSession ? 'bg-rose-50 text-rose-600' : 'bg-amber-50 text-amber-600'
+            }`}
+          >
+            <AlertTriangle className="w-6 h-6" />
+          </div>
+          <h1 className="text-lg font-bold text-slate-900">
+            {isSuspendedSession ? 'Account Suspended' : 'Scheduled Portal Maintenance'}
+          </h1>
+          <p className="text-xs text-slate-600 leading-relaxed">
+            {isSuspendedSession
+              ? 'Your CEB Job Portal account has been suspended by a System Administrator. Please contact CEB Helpdesk (1987) for assistance.'
+              : 'The CEB Job Portal is currently undergoing scheduled maintenance. Please check back shortly.'}
+          </p>
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold transition cursor-pointer"
+          >
+            <LogOut className="w-4 h-4" />
+            <span>Sign Out</span>
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // Generate breadcrumb from path
   const currentPathSegments = location.pathname.split('/').filter(Boolean);

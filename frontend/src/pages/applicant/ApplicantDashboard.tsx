@@ -18,9 +18,11 @@ import {
   PhoneCall,
   Pause,
   Play,
+  Megaphone,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { MOCK_APPLICATIONS, MOCK_VACANCIES } from '../../data/mockRecruitmentData';
+import { getPortalSettings } from '../../utils/portalStorage';
 import type { JobVacancy } from '../../types';
 
 export const ApplicantDashboard: React.FC = () => {
@@ -30,6 +32,10 @@ export const ApplicantDashboard: React.FC = () => {
   const [activeVacancyToApply, setActiveVacancyToApply] = useState<JobVacancy | null>(null);
   const [showGuidelineModal, setShowGuidelineModal] = useState(false);
   const [isGuidelineBarVisible, setIsGuidelineBarVisible] = useState(true);
+  const portalSettings = getPortalSettings();
+  const [showAnnouncementBanner, setShowAnnouncementBanner] = useState(
+    Boolean(portalSettings.announcementBanner.trim())
+  );
 
   // 4 Detailed Core Guideline Slides for the compact alternating Showcase (No Photos, Reduced Height)
   const guidelineSlides = [
@@ -141,6 +147,29 @@ export const ApplicantDashboard: React.FC = () => {
           </div>
         </div>
 
+        {/* Live Admin Portal Announcement Notice */}
+        {showAnnouncementBanner && portalSettings.announcementBanner.trim() && (
+          <div className="rounded-2xl bg-sky-50 border border-sky-200 px-4 py-3 flex items-start sm:items-center justify-between gap-3 text-xs text-sky-950 shadow-2xs">
+            <div className="flex items-start sm:items-center gap-2.5">
+              <div className="w-7 h-7 rounded-lg bg-sky-100 text-sky-700 flex items-center justify-center shrink-0">
+                <Megaphone className="w-4 h-4" />
+              </div>
+              <p className="leading-relaxed">
+                <strong className="font-bold text-sky-900">Portal Notice ({portalSettings.recruitmentCycle}): </strong>
+                {portalSettings.announcementBanner}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowAnnouncementBanner(false)}
+              className="p-1 rounded-lg text-sky-600 hover:bg-sky-100 cursor-pointer shrink-0"
+              title="Dismiss notice"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
+
         {/* 2. Compact Dynamic Rotating Guidelines Showcase (No Photos, Reduced Height) */}
         {isGuidelineBarVisible && (
           <div
@@ -157,7 +186,7 @@ export const ApplicantDashboard: React.FC = () => {
                 <div className="flex items-center gap-2">
                   <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-400/20 text-amber-300 font-bold border border-amber-400/30 text-[11px]">
                     <Zap className="w-3 h-3 fill-amber-400 text-amber-400" />
-                    Official CEB Recruitment Advisory • 2026/2027
+                    Official CEB Recruitment Advisory • {portalSettings.recruitmentCycle}
                   </span>
                   <span className="text-[11px] text-sky-200/70 hidden md:inline">
                     Statutory Scheme of Recruitment (SOR)
