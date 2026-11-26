@@ -11,6 +11,10 @@ import { DashboardLayout } from './components/layout/DashboardLayout';
 import { AdminDashboard } from './pages/admin/AdminDashboard';
 import { UserManagementPage } from './pages/admin/UserManagementPage';
 import { DepartmentSettingsPage } from './pages/admin/DepartmentSettingsPage';
+import { HrDashboardPage } from './pages/hr/HrDashboardPage';
+import { HrVacanciesPage } from './pages/hr/HrVacanciesPage';
+import { HrApplicationsReviewPage } from './pages/hr/HrApplicationsReviewPage';
+import { HrShortlistPage } from './pages/hr/HrShortlistPage';
 
 function App() {
   return (
@@ -29,16 +33,13 @@ function App() {
             <Route path="/applicant/profile" element={<CandidateProfilePage />} />
           </Route>
 
-          <Route
-            path="/hr/dashboard"
-            element={
-              <PlaceholderDashboard
-                title="HR & Recruitment Management Dashboard"
-                subtitle="Manage vacancies, evaluate candidate applications, eligibility checks, and shortlist candidates."
-                roleTag="HR Staff View"
-              />
-            }
-          />
+          {/* HR Portal — persistent DashboardLayout via Outlet */}
+          <Route element={<DashboardLayout />}>
+            <Route path="/hr/dashboard" element={<HrDashboardPage />} />
+            <Route path="/hr/vacancies" element={<HrVacanciesPage />} />
+            <Route path="/hr/applications" element={<HrApplicationsReviewPage />} />
+            <Route path="/hr/shortlist" element={<HrShortlistPage />} />
+          </Route>
           <Route
             path="/director/dashboard"
             element={
