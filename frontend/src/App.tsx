@@ -6,7 +6,6 @@ import { ApplicantDashboard } from './pages/applicant/ApplicantDashboard';
 import { ExploreVacanciesPage } from './pages/applicant/ExploreVacanciesPage';
 import { MyApplicationsPage } from './pages/applicant/MyApplicationsPage';
 import { CandidateProfilePage } from './pages/applicant/CandidateProfilePage';
-import { PlaceholderDashboard } from './components/PlaceholderDashboard';
 import { DashboardLayout } from './components/layout/DashboardLayout';
 import { AdminDashboard } from './pages/admin/AdminDashboard';
 import { UserManagementPage } from './pages/admin/UserManagementPage';
@@ -15,6 +14,9 @@ import { HrDashboardPage } from './pages/hr/HrDashboardPage';
 import { HrVacanciesPage } from './pages/hr/HrVacanciesPage';
 import { HrApplicationsReviewPage } from './pages/hr/HrApplicationsReviewPage';
 import { HrShortlistPage } from './pages/hr/HrShortlistPage';
+import { DirectorDashboardPage } from './pages/director/DirectorDashboardPage';
+import { DirectorShortlistedPage } from './pages/director/DirectorShortlistedPage';
+import { DirectorApprovalsPage } from './pages/director/DirectorApprovalsPage';
 
 function App() {
   return (
@@ -40,16 +42,12 @@ function App() {
             <Route path="/hr/applications" element={<HrApplicationsReviewPage />} />
             <Route path="/hr/shortlist" element={<HrShortlistPage />} />
           </Route>
-          <Route
-            path="/director/dashboard"
-            element={
-              <PlaceholderDashboard
-                title="Director Board Evaluation Portal"
-                subtitle="Review shortlisted applications, inspect CV/supporting documents, grant approval/rejection with remarks."
-                roleTag="Director Board View"
-              />
-            }
-          />
+          {/* Director Board Portal — persistent DashboardLayout via Outlet */}
+          <Route element={<DashboardLayout />}>
+            <Route path="/director/dashboard" element={<DirectorDashboardPage />} />
+            <Route path="/director/shortlisted" element={<DirectorShortlistedPage />} />
+            <Route path="/director/approvals" element={<DirectorApprovalsPage />} />
+          </Route>
           {/* Admin Portal — persistent DashboardLayout via Outlet */}
           <Route element={<DashboardLayout />}>
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
