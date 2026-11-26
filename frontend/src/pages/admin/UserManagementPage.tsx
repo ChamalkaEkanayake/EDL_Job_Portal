@@ -16,18 +16,18 @@ import {
   Check,
   Lock,
 } from 'lucide-react';
+import { type SystemUser } from '../../data/mockRecruitmentData';
 import {
-  MOCK_SYSTEM_USERS,
-  MOCK_DEPARTMENTS,
-  type SystemUser,
-} from '../../data/mockRecruitmentData';
+  getSystemUsers,
+  saveSystemUsers,
+  getDepartments,
+  appendAuditLog,
+} from '../../utils/portalStorage';
 import { useAuth } from '../../contexts/AuthContext';
 import type { UserRole } from '../../types';
 
 type RoleFilter = 'ALL' | UserRole;
 type StatusFilter = 'ALL' | 'Active' | 'Suspended';
-
-const STORAGE_KEY = 'ceb_admin_system_users';
 
 const ROLE_BADGE_MAP: Record<UserRole, { bg: string; text: string; label: string }> = {
   ADMIN: {
@@ -99,15 +99,7 @@ const ROLE_PERMISSIONS_MATRIX: {
 export const UserManagementPage: React.FC = () => {
   const { currentUser } = useAuth();
 
-  const [users, setUsers] = useState<SystemUser[]>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) return JSON.parse(saved) as SystemUser[];
-    } catch {
-      // ignore malformed storage
-    }
-    return MOCK_SYSTEM_USERS;
-  });
+  const [users, setUsers] = useState<SystemUser[]>(() => getSystemUsers());
 
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<RoleFilter>('ALL');
@@ -138,7 +130,7 @@ export const UserManagementPage: React.FC = () => {
   const [pendingSuspendUser, setPendingSuspendUser] = useState<SystemUser | null>(null);
 
   const divisionOptions = useMemo(() => {
-    const deptNames = MOCK_DEPARTMENTS.map((d) => d.name);
+    const deptNames = getDepartments().map((d) => d.name);
     return Array.from(
       new Set([
         ...deptNames,
@@ -158,11 +150,7 @@ export const UserManagementPage: React.FC = () => {
 
   const persistUsers = (nextUsers: SystemUser[], message?: string) => {
     setUsers(nextUsers);
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(nextUsers));
-    } catch {
-      // ignore storage errors
-    }
+    saveSystemUsers(nextUsers);
     if (message) showToast(message, 'success');
   };
 
@@ -231,6 +219,15 @@ export const UserManagementPage: React.FC = () => {
       [newUser, ...users],
       `Created ${newUser.role} account for ${newUser.name} (${newUser.email}).`
     );
+    appendAuditLog({
+      actorName: currentUser?.name || 'System Admin',
+      actorRole: currentUser?.role || 'ADMIN',
+      action: 'Provisioned Staff/Board Account',
+      target: `${newUser.email} (${newUser.role})`,
+      category: 'USER_ADMIN',
+      severity: 'INFO',
+      details: `Assigned to ${newUser.department}.`,
+    });
     setIsAddOpen(false);
   };
 
@@ -260,6 +257,15 @@ export const UserManagementPage: React.FC = () => {
       next,
       `Updated access profile for ${editingUser.name} (${editRole} • ${editStatus}).`
     );
+    appendAuditLog({
+      actorName: currentUser?.name || 'System Admin',
+      actorRole: currentUser?.role || 'ADMIN',
+      action: 'Updated User Role & Access',
+      target: editingUser.email,
+      category: 'USER_ADMIN',
+      severity: editStatus === 'Suspended' ? 'CRITICAL' : 'INFO',
+      details: `Set role to ${editRole}, division "${editDept}", status ${editStatus}.`,
+    });
     setEditingUser(null);
   };
 
@@ -277,6 +283,15 @@ export const UserManagementPage: React.FC = () => {
 
     const next = users.map((u) => (u.id === user.id ? { ...u, status: 'Active' as const } : u));
     persistUsers(next, `Reactivated account for ${user.name}.`);
+    appendAuditLog({
+      actorName: currentUser?.name || 'System Admin',
+      actorRole: currentUser?.role || 'ADMIN',
+      action: 'Reactivated User Account',
+      target: user.email,
+      category: 'USER_ADMIN',
+      severity: 'INFO',
+      details: `Restored portal sign-in access for ${user.name}.`,
+    });
   };
 
   const confirmSuspend = () => {
@@ -285,6 +300,15 @@ export const UserManagementPage: React.FC = () => {
       u.id === pendingSuspendUser.id ? { ...u, status: 'Suspended' as const } : u
     );
     persistUsers(next, `Account for ${pendingSuspendUser.name} has been suspended.`);
+    appendAuditLog({
+      actorName: currentUser?.name || 'System Admin',
+      actorRole: currentUser?.role || 'ADMIN',
+      action: 'Suspended User Account',
+      target: pendingSuspendUser.email,
+      category: 'USER_ADMIN',
+      severity: 'CRITICAL',
+      details: `Suspended portal access for ${pendingSuspendUser.name}.`,
+    });
     setPendingSuspendUser(null);
   };
 

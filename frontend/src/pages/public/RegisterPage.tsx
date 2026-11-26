@@ -15,6 +15,12 @@ import {
 } from 'lucide-react';
 import { CebJobPortalLogo } from '../../components/common/CebJobPortalLogo';
 import { useAuth } from '../../contexts/AuthContext';
+import {
+  getPortalSettings,
+  getSystemUsers,
+  saveSystemUsers,
+  appendAuditLog,
+} from '../../utils/portalStorage';
 
 export const RegisterPage: React.FC = () => {
   const navigate = useNavigate();
@@ -30,10 +36,18 @@ export const RegisterPage: React.FC = () => {
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const portalSettings = getPortalSettings();
+  const registrationClosed =
+    portalSettings.maintenanceMode || !portalSettings.allowApplicantRegistration;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
+
+    if (registrationClosed) {
+      setErrorMsg('External applicant registration is currently closed by the System Administrator.');
+      return;
+    }
 
     if (password !== confirmPassword) {
       setErrorMsg('Passwords do not match. Please verify.');
@@ -48,9 +62,46 @@ export const RegisterPage: React.FC = () => {
     setIsLoading(true);
 
     setTimeout(() => {
-      // Register candidate and log in as APPLICANT
-      login(email, 'APPLICANT');
+      const cleanEmail = email.trim().toLowerCase();
+      const existingUsers = getSystemUsers();
+      const duplicate = existingUsers.find((u) => u.email.toLowerCase() === cleanEmail);
+      if (duplicate) {
+        setIsLoading(false);
+        setErrorMsg('An account with this email already exists. Please sign in instead.');
+        return;
+      }
+
+      saveSystemUsers([
+        {
+          id: `usr-app-${Date.now().toString().slice(-4)}`,
+          name: fullName.trim(),
+          email: cleanEmail,
+          role: 'APPLICANT',
+          department: 'External Candidate',
+          status: 'Active',
+          lastActive: 'Just now',
+          createdAt: '2026-11-26',
+        },
+        ...existingUsers,
+      ]);
+
+      appendAuditLog({
+        actorName: fullName.trim(),
+        actorRole: 'APPLICANT',
+        action: 'Registered New Applicant Account',
+        target: cleanEmail,
+        category: 'AUTH',
+        severity: 'INFO',
+        details: `Self-registered candidate profile (NIC: ${nic.trim()}).`,
+      });
+
+      const result = login(cleanEmail, 'APPLICANT', fullName.trim());
       setIsLoading(false);
+
+      if (!result.ok) {
+        setErrorMsg(result.error || 'Unable to complete registration.');
+        return;
+      }
       navigate('/applicant/dashboard');
     }, 600);
   };
@@ -131,6 +182,27 @@ export const RegisterPage: React.FC = () => {
               </div>
             )}
 
+            {registrationClosed ? (
+              <div className="p-5 rounded-2xl bg-amber-50 border border-amber-200 space-y-3 text-xs text-amber-900">
+                <p className="font-bold text-sm text-amber-950">
+                  {portalSettings.maintenanceMode
+                    ? 'Portal Maintenance in Progress'
+                    : 'Applicant Registration Currently Closed'}
+                </p>
+                <p className="leading-relaxed">
+                  {portalSettings.maintenanceMode
+                    ? 'The CEB Job Portal is currently undergoing scheduled maintenance. Please check back shortly.'
+                    : 'New external applicant registrations have been temporarily paused by the System Administrator. Existing candidates can still sign in.'}
+                </p>
+                <Link
+                  to="/login"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold transition"
+                >
+                  <LogIn className="w-3.5 h-3.5" />
+                  <span>Return to Portal Login</span>
+                </Link>
+              </div>
+            ) : (
             <form onSubmit={handleSubmit} className="space-y-3.5">
               {/* Full Name */}
               <div>
@@ -287,6 +359,7 @@ export const RegisterPage: React.FC = () => {
                 </Link>
               </div>
             </form>
+            )}
           </div>
 
         </div>

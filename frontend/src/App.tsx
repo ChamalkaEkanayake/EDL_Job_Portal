@@ -10,6 +10,7 @@ import { PlaceholderDashboard } from './components/PlaceholderDashboard';
 import { DashboardLayout } from './components/layout/DashboardLayout';
 import { AdminDashboard } from './pages/admin/AdminDashboard';
 import { UserManagementPage } from './pages/admin/UserManagementPage';
+import { DepartmentSettingsPage } from './pages/admin/DepartmentSettingsPage';
 
 function App() {
   return (
@@ -52,18 +53,8 @@ function App() {
           <Route element={<DashboardLayout />}>
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
             <Route path="/admin/users" element={<UserManagementPage />} />
+            <Route path="/admin/departments" element={<DepartmentSettingsPage />} />
           </Route>
-
-          <Route
-            path="/admin/departments"
-            element={
-              <PlaceholderDashboard
-                title="Department & System Settings"
-                subtitle="Configure CEB engineering/corporate divisions and global recruitment portal policies."
-                roleTag="System Admin View"
-              />
-            }
-          />
 
           {/* Default redirect to Login */}
           <Route path="*" element={<Navigate to="/login" replace />} />

@@ -499,10 +499,109 @@ export interface DepartmentItem {
   code: string;
   name: string;
   headOfDivision: string;
+  assignedHrCoordinator?: string;
   location: string;
   status: 'Active' | 'Inactive';
   openVacancies: number;
 }
+
+export interface PortalSettings {
+  recruitmentCycle: string;
+  maxUploadSizeMb: number;
+  allowedFileTypes: 'PDF_ONLY' | 'PDF_AND_IMAGES';
+  sessionTimeoutMinutes: number;
+  allowApplicantRegistration: boolean;
+  requireJpCertificationNotice: boolean;
+  automatedCandidateAlerts: boolean;
+  maintenanceMode: boolean;
+  announcementBanner: string;
+}
+
+export const DEFAULT_PORTAL_SETTINGS: PortalSettings = {
+  recruitmentCycle: '2026/2027',
+  maxUploadSizeMb: 5,
+  allowedFileTypes: 'PDF_ONLY',
+  sessionTimeoutMinutes: 30,
+  allowApplicantRegistration: true,
+  requireJpCertificationNotice: true,
+  automatedCandidateAlerts: true,
+  maintenanceMode: false,
+  announcementBanner:
+    '2026/2027 Statutory Gazette recruitment cycle is currently active. Ensure all certified PDF uploads are clear and legible.',
+};
+
+export type NotificationEventKey =
+  | 'APPLICATION_SUBMITTED'
+  | 'FURTHER_INFO_REQUESTED'
+  | 'SHORTLISTED_CALL_LETTER'
+  | 'BOARD_APPROVED';
+
+export interface NotificationTemplate {
+  id: string;
+  eventKey: NotificationEventKey;
+  title: string;
+  triggerStatus: string;
+  channels: {
+    email: boolean;
+    sms: boolean;
+    portalAlert: boolean;
+  };
+  subject: string;
+  body: string;
+  footerDisclaimer: string;
+  lastUpdated: string;
+}
+
+export const DEFAULT_NOTIFICATION_TEMPLATES: NotificationTemplate[] = [
+  {
+    id: 'tpl-submitted',
+    eventKey: 'APPLICATION_SUBMITTED',
+    title: 'Application Acknowledgement',
+    triggerStatus: 'Submitted',
+    channels: { email: true, sms: true, portalAlert: true },
+    subject: 'CEB Recruitment: Application Received ({{referenceNo}}) — {{jobTitle}}',
+    body: 'Dear {{candidateName}},\n\nYour application for the position of {{jobTitle}} under {{division}} has been successfully registered with reference number {{referenceNo}} on {{date}}.\n\nYou may monitor preliminary HR screening updates directly from your Candidate Dashboard.',
+    footerDisclaimer:
+      'Ceylon Electricity Board never charges application or processing fees. Report suspicious requests to 1987.',
+    lastUpdated: '2026-11-18',
+  },
+  {
+    id: 'tpl-further-info',
+    eventKey: 'FURTHER_INFO_REQUESTED',
+    title: 'Further Information / Document Re-upload',
+    triggerStatus: 'Requires Further Information',
+    channels: { email: true, sms: true, portalAlert: true },
+    subject: 'Action Required ({{referenceNo}}): Additional Verification Needed for {{jobTitle}}',
+    body: 'Dear {{candidateName}},\n\nDuring preliminary scrutiny of your application ({{referenceNo}}) for {{jobTitle}}, the HR Recruitment Unit noted the following requirement:\n\n"{{remark}}"\n\nPlease sign in to the CEB Job Portal and upload a clear JP-certified PDF copy before the specified deadline.',
+    footerDisclaimer:
+      'Applications with unverified scans will not proceed to technical eligibility scoring under the SOR.',
+    lastUpdated: '2026-11-20',
+  },
+  {
+    id: 'tpl-shortlisted',
+    eventKey: 'SHORTLISTED_CALL_LETTER',
+    title: 'Written Exam / Interview Call Letter',
+    triggerStatus: 'Shortlisted',
+    channels: { email: true, sms: true, portalAlert: true },
+    subject: 'Official Call Letter ({{referenceNo}}): Shortlisted for {{jobTitle}}',
+    body: 'Dear {{candidateName}},\n\nCongratulations. Your application ({{referenceNo}}) for {{jobTitle}} ({{division}}) has been shortlisted.\n\nPlease log in to "My Applications" on the CEB Job Portal to download and print your official Written Aptitude / Interview Call Letter scheduled for {{date}}.',
+    footerDisclaimer:
+      'Bring your original NIC and original academic certificates to the examination/interview venue.',
+    lastUpdated: '2026-11-22',
+  },
+  {
+    id: 'tpl-approved',
+    eventKey: 'BOARD_APPROVED',
+    title: 'Director Board Approval & Offer Dispatch',
+    triggerStatus: 'Approved',
+    channels: { email: true, sms: false, portalAlert: true },
+    subject: 'Appointment Approval Notice ({{referenceNo}}) — Ceylon Electricity Board',
+    body: 'Dear {{candidateName}},\n\nWe are pleased to inform you that the CEB Board of Directors has approved your selection for the post of {{jobTitle}} ({{division}}) under reference {{referenceNo}}.\n\nYour formal appointment offer letter is being dispatched via registered post and official email.',
+    footerDisclaimer:
+      'Recruitment & Selection Branch, Ceylon Electricity Board Head Office, Colombo 02.',
+    lastUpdated: '2026-11-24',
+  },
+];
 
 export type AuditCategory = 'AUTH' | 'RECRUITMENT' | 'USER_ADMIN' | 'SYSTEM';
 export type AuditSeverity = 'INFO' | 'WARNING' | 'CRITICAL';
@@ -609,6 +708,7 @@ export const MOCK_DEPARTMENTS: DepartmentItem[] = [
     code: 'TRN-01',
     name: 'Transmission Division',
     headOfDivision: 'Eng. R. M. Wickramasuriya',
+    assignedHrCoordinator: 'Nimali Senanayake',
     location: 'Head Office, Colombo 02',
     status: 'Active',
     openVacancies: 1,
@@ -618,6 +718,7 @@ export const MOCK_DEPARTMENTS: DepartmentItem[] = [
     code: 'GEN-02',
     name: 'Generation Division',
     headOfDivision: 'Eng. S. Abeysekara',
+    assignedHrCoordinator: 'Tharindu Jayawardena',
     location: 'Laxapana & Hydro Complex',
     status: 'Active',
     openVacancies: 1,
@@ -627,6 +728,7 @@ export const MOCK_DEPARTMENTS: DepartmentItem[] = [
     code: 'DST-03',
     name: 'Distribution Division',
     headOfDivision: 'Eng. K. Gunawardena',
+    assignedHrCoordinator: 'Nimali Senanayake',
     location: 'Regional Operations (Colombo / Kandy)',
     status: 'Active',
     openVacancies: 1,
@@ -636,6 +738,7 @@ export const MOCK_DEPARTMENTS: DepartmentItem[] = [
     code: 'ITD-04',
     name: 'Information Technology Division',
     headOfDivision: 'Eng. D. Rajapaksha',
+    assignedHrCoordinator: 'Tharindu Jayawardena',
     location: 'Colombo 02',
     status: 'Active',
     openVacancies: 1,
@@ -645,6 +748,7 @@ export const MOCK_DEPARTMENTS: DepartmentItem[] = [
     code: 'FIN-05',
     name: 'Finance Division',
     headOfDivision: 'Mrs. A. Fernando',
+    assignedHrCoordinator: 'Nimali Senanayake',
     location: 'Head Office, Colombo 02',
     status: 'Active',
     openVacancies: 1,
@@ -654,6 +758,7 @@ export const MOCK_DEPARTMENTS: DepartmentItem[] = [
     code: 'HRD-06',
     name: 'Human Resources Division',
     headOfDivision: 'Mrs. Nimali Senanayake',
+    assignedHrCoordinator: 'Nimali Senanayake',
     location: 'Head Office, Colombo 02',
     status: 'Active',
     openVacancies: 0,

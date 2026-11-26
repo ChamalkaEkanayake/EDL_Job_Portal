@@ -27,15 +27,20 @@ import {
   Legend,
 } from 'recharts';
 import {
-  MOCK_SYSTEM_USERS,
-  MOCK_DEPARTMENTS,
   MOCK_VACANCIES,
-  MOCK_AUDIT_LOGS,
   MOCK_ADMIN_ACTIVITY_SERIES,
   type AuditCategory,
   type AuditLogEntry,
   type AuditSeverity,
 } from '../../data/mockRecruitmentData';
+import {
+  getSystemUsers,
+  getDepartments,
+  getAuditLogs,
+  getPortalSettings,
+  appendAuditLog,
+} from '../../utils/portalStorage';
+import { useAuth } from '../../contexts/AuthContext';
 import type { UserRole } from '../../types';
 
 const ROLE_BADGE_CLASS: Record<UserRole, string> = {
@@ -59,31 +64,37 @@ const CATEGORY_LABEL: Record<AuditCategory, string> = {
 };
 
 export const AdminDashboard: React.FC = () => {
+  const { currentUser } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<'ALL' | AuditCategory>('ALL');
   const [selectedLog, setSelectedLog] = useState<AuditLogEntry | null>(null);
   const [exportMessage, setExportMessage] = useState<string | null>(null);
 
+  const systemUsers = useMemo(() => getSystemUsers(), []);
+  const departments = useMemo(() => getDepartments(), []);
+  const portalSettings = useMemo(() => getPortalSettings(), []);
+  const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>(() => getAuditLogs());
+
   const metrics = useMemo(() => {
-    const activeUsers = MOCK_SYSTEM_USERS.filter((u) => u.status === 'Active').length;
-    const suspendedUsers = MOCK_SYSTEM_USERS.filter((u) => u.status === 'Suspended').length;
-    const activeDepts = MOCK_DEPARTMENTS.filter((d) => d.status === 'Active').length;
+    const activeUsers = systemUsers.filter((u) => u.status === 'Active').length;
+    const suspendedUsers = systemUsers.filter((u) => u.status === 'Suspended').length;
+    const activeDepts = departments.filter((d) => d.status === 'Active').length;
     const publishedVacancies = MOCK_VACANCIES.filter((v) => v.status === 'PUBLISHED').length;
-    const flaggedEvents = MOCK_AUDIT_LOGS.filter(
+    const flaggedEvents = auditLogs.filter(
       (l) => l.severity === 'WARNING' || l.severity === 'CRITICAL'
     ).length;
 
     return {
-      totalUsers: MOCK_SYSTEM_USERS.length,
+      totalUsers: systemUsers.length,
       activeUsers,
       suspendedUsers,
       activeDepts,
-      totalDepts: MOCK_DEPARTMENTS.length,
+      totalDepts: departments.length,
       publishedVacancies,
-      totalAuditLogs: MOCK_AUDIT_LOGS.length,
+      totalAuditLogs: auditLogs.length,
       flaggedEvents,
     };
-  }, []);
+  }, [systemUsers, departments, auditLogs]);
 
   const roleBreakdown = useMemo(() => {
     const roles: { role: UserRole; label: string; color: string }[] = [
@@ -93,14 +104,14 @@ export const AdminDashboard: React.FC = () => {
       { role: 'ADMIN', label: 'System Admins', color: 'bg-purple-600' },
     ];
     return roles.map((item) => {
-      const count = MOCK_SYSTEM_USERS.filter((u) => u.role === item.role).length;
-      const pct = Math.round((count / Math.max(1, MOCK_SYSTEM_USERS.length)) * 100);
+      const count = systemUsers.filter((u) => u.role === item.role).length;
+      const pct = Math.round((count / Math.max(1, systemUsers.length)) * 100);
       return { ...item, count, pct };
     });
-  }, []);
+  }, [systemUsers]);
 
   const filteredLogs = useMemo(() => {
-    return MOCK_AUDIT_LOGS.filter((log) => {
+    return auditLogs.filter((log) => {
       const q = searchQuery.trim().toLowerCase();
       const matchesSearch =
         !q ||
@@ -111,7 +122,7 @@ export const AdminDashboard: React.FC = () => {
       const matchesCat = selectedCategory === 'ALL' || log.category === selectedCategory;
       return matchesSearch && matchesCat;
     });
-  }, [searchQuery, selectedCategory]);
+  }, [auditLogs, searchQuery, selectedCategory]);
 
   const handleExportCsv = () => {
     const headers = ['ID', 'Timestamp', 'Actor', 'Role', 'Category', 'Severity', 'Action', 'Target', 'IP'];
@@ -134,6 +145,17 @@ export const AdminDashboard: React.FC = () => {
     a.download = 'ceb_portal_audit_logs.csv';
     a.click();
     URL.revokeObjectURL(url);
+
+    const updatedLogs = appendAuditLog({
+      actorName: currentUser?.name || 'System Admin',
+      actorRole: currentUser?.role || 'ADMIN',
+      action: 'Exported Audit Trail CSV',
+      target: `${filteredLogs.length} Audit Records`,
+      category: 'SYSTEM',
+      severity: 'INFO',
+      details: `Exported filtered system audit logs (${selectedCategory}).`,
+    });
+    setAuditLogs(updatedLogs);
 
     setExportMessage(`Exported ${filteredLogs.length} audit log records to CSV.`);
     setTimeout(() => setExportMessage(null), 4000);
@@ -232,7 +254,7 @@ export const AdminDashboard: React.FC = () => {
             </div>
           </div>
           <div className="text-2xl font-black text-slate-900">{metrics.publishedVacancies}</div>
-          <p className="text-xs text-slate-500 mt-1">2026/2027 Recruitment Cycle</p>
+          <p className="text-xs text-slate-500 mt-1">{portalSettings.recruitmentCycle} Recruitment Cycle</p>
         </div>
 
         <div className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-2xs">
@@ -360,10 +382,16 @@ export const AdminDashboard: React.FC = () => {
               <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between">
                 <span className="text-slate-600 font-medium flex items-center gap-1.5">
                   <Lock className="w-3.5 h-3.5 text-emerald-600" />
-                  Auth Guard
+                  Portal Mode
                 </span>
-                <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                  Active
+                <span
+                  className={`text-[11px] font-bold px-2 py-0.5 rounded-full border ${
+                    portalSettings.maintenanceMode
+                      ? 'text-rose-700 bg-rose-50 border-rose-200'
+                      : 'text-emerald-700 bg-emerald-50 border-emerald-200'
+                  }`}
+                >
+                  {portalSettings.maintenanceMode ? 'Maintenance' : 'Online'}
                 </span>
               </div>
               <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between">
@@ -372,7 +400,7 @@ export const AdminDashboard: React.FC = () => {
                   Max PDF Size
                 </span>
                 <span className="text-[11px] font-bold text-slate-700 bg-white px-2 py-0.5 rounded-full border border-slate-200">
-                  5 MB
+                  {portalSettings.maxUploadSizeMb} MB
                 </span>
               </div>
             </div>

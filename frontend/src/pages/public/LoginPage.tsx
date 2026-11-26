@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { useAuth, MOCK_ACCOUNTS } from '../../contexts/AuthContext';
 import { CebJobPortalLogo } from '../../components/common/CebJobPortalLogo';
+import { getPortalSettings, getSystemUsers } from '../../utils/portalStorage';
 import type { UserRole } from '../../types';
 
 export const LoginPage: React.FC = () => {
@@ -24,6 +25,7 @@ export const LoginPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const portalSettings = getPortalSettings();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,7 +41,10 @@ export const LoginPage: React.FC = () => {
     setTimeout(() => {
       const cleanInput = usernameOrEmail.trim().toLowerCase();
 
-      // Check if matches known mock users or determine role
+      // Check live system users first (supports Admin-provisioned accounts), then fallback heuristics
+      const liveUser = getSystemUsers().find(
+        (u) => u.email.toLowerCase() === cleanInput
+      );
       const matched = MOCK_ACCOUNTS.find(
         (acc) =>
           acc.email.toLowerCase() === cleanInput ||
@@ -49,7 +54,10 @@ export const LoginPage: React.FC = () => {
       let targetRole: UserRole = 'APPLICANT';
       let targetEmail = usernameOrEmail;
 
-      if (matched) {
+      if (liveUser) {
+        targetRole = liveUser.role;
+        targetEmail = liveUser.email;
+      } else if (matched) {
         targetRole = matched.role;
         targetEmail = matched.email;
       } else if (cleanInput.includes('admin')) {
@@ -62,11 +70,16 @@ export const LoginPage: React.FC = () => {
         targetRole = 'APPLICANT';
       }
 
-      login(targetEmail, targetRole);
+      const result = login(targetEmail, targetRole);
       setIsLoading(false);
 
-      // Role-based redirect to respective dashboard
-      switch (targetRole) {
+      if (!result.ok) {
+        setErrorMsg(result.error || 'Unable to sign in.');
+        return;
+      }
+
+      const effectiveRole = result.role || targetRole;
+      switch (effectiveRole) {
         case 'APPLICANT':
           navigate('/applicant/dashboard');
           break;
@@ -163,6 +176,12 @@ export const LoginPage: React.FC = () => {
                 Enter your credentials to access your job applications or management dashboard.
               </p>
             </div>
+
+            {portalSettings.maintenanceMode && (
+              <div className="mb-4 p-3 rounded-lg bg-amber-50 border border-amber-200 text-amber-900 text-xs font-medium">
+                <strong>Scheduled Maintenance Active:</strong> Only System Administrators can sign in right now.
+              </div>
+            )}
 
             {errorMsg && (
               <div className="mb-4 p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs">

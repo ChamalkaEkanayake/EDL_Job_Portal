@@ -32,6 +32,7 @@ import {
   type EducationEntry,
   type WorkExperienceEntry,
 } from '../../data/mockRecruitmentData';
+import { getPortalSettings } from '../../utils/portalStorage';
 
 type ProfileTab = 'PERSONAL' | 'EDUCATION' | 'EXPERIENCE' | 'DOCUMENTS';
 
@@ -264,10 +265,12 @@ export const CandidateProfilePage: React.FC = () => {
   };
 
   // Document Vault handlers
+  const portalSettings = getPortalSettings();
   const handleDocumentUpload = (docId: string, file: File | undefined) => {
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
-      showToast('File size must be under 5MB.', 'error');
+    const maxBytes = portalSettings.maxUploadSizeMb * 1024 * 1024;
+    if (file.size > maxBytes) {
+      showToast(`File size must be under ${portalSettings.maxUploadSizeMb}MB (Portal Policy).`, 'error');
       return;
     }
 
