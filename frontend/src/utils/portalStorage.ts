@@ -2,6 +2,8 @@ import {
   MOCK_SYSTEM_USERS,
   MOCK_DEPARTMENTS,
   MOCK_AUDIT_LOGS,
+  MOCK_VACANCIES,
+  MOCK_HR_APPLICATIONS,
   DEFAULT_PORTAL_SETTINGS,
   DEFAULT_NOTIFICATION_TEMPLATES,
   type SystemUser,
@@ -10,6 +12,7 @@ import {
   type PortalSettings,
   type NotificationTemplate,
 } from '../data/mockRecruitmentData';
+import type { JobVacancy, HrApplication } from '../types';
 
 export const STORAGE_KEYS = {
   SYSTEM_USERS: 'ceb_admin_system_users',
@@ -17,6 +20,8 @@ export const STORAGE_KEYS = {
   PORTAL_SETTINGS: 'ceb_admin_portal_settings',
   AUDIT_LOGS: 'ceb_admin_audit_logs',
   NOTIFICATION_TEMPLATES: 'ceb_admin_notification_templates',
+  HR_VACANCIES: 'ceb_hr_vacancies',
+  HR_APPLICATIONS: 'ceb_hr_applications',
 } as const;
 
 function readJson<T>(key: string, fallback: T): T {
@@ -77,6 +82,22 @@ export function saveNotificationTemplates(templates: NotificationTemplate[]): vo
 
 export function getAuditLogs(): AuditLogEntry[] {
   return readJson<AuditLogEntry[]>(STORAGE_KEYS.AUDIT_LOGS, MOCK_AUDIT_LOGS);
+}
+
+export function getHrVacancies(): JobVacancy[] {
+  return readJson<JobVacancy[]>(STORAGE_KEYS.HR_VACANCIES, MOCK_VACANCIES);
+}
+
+export function saveHrVacancies(vacancies: JobVacancy[]): void {
+  writeJson(STORAGE_KEYS.HR_VACANCIES, vacancies);
+}
+
+export function getHrApplications(): HrApplication[] {
+  return readJson<HrApplication[]>(STORAGE_KEYS.HR_APPLICATIONS, MOCK_HR_APPLICATIONS);
+}
+
+export function saveHrApplications(applications: HrApplication[]): void {
+  writeJson(STORAGE_KEYS.HR_APPLICATIONS, applications);
 }
 
 function formatNowTimestamp(): string {
