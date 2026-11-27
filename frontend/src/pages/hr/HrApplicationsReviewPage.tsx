@@ -17,6 +17,7 @@ import {
   saveHrApplications,
   getHrVacancies,
   appendAuditLog,
+  pushNotification,
 } from '../../utils/portalStorage';
 
 export const HrApplicationsReviewPage: React.FC = () => {
@@ -125,6 +126,19 @@ export const HrApplicationsReviewPage: React.FC = () => {
 
     setApplications(updated);
     saveHrApplications(updated);
+
+    pushNotification({
+      targetRole: 'APPLICANT',
+      targetEmail: selectedApp.candidateEmail,
+      title:
+        newStatus === 'Requires Further Information'
+          ? `Action Required (${selectedApp.referenceNo}): ${infoRequestDocLabel}`
+          : `Application ${selectedApp.referenceNo} marked as ${newStatus}`,
+      category: 'Application',
+      statusTag: newStatus,
+      actionRequired: newStatus === 'Requires Further Information',
+      actionPath: '/applicant/applications',
+    });
 
     appendAuditLog({
       actorName: 'Nimali Senanayake (HR)',

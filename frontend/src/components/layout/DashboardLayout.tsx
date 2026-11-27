@@ -3,6 +3,7 @@ import { NavLink, useNavigate, useLocation, Outlet } from 'react-router-dom';
 import {
   Search,
   Bell,
+  BellOff,
   LogOut,
   ChevronLeft,
   ChevronRight,
@@ -18,7 +19,13 @@ import {
 import { useAuth } from '../../contexts/AuthContext';
 import { CebJobPortalLogo } from '../common/CebJobPortalLogo';
 import { NotificationModal } from './NotificationModal';
-import { getPortalSettings, getSystemUsers } from '../../utils/portalStorage';
+import {
+  getPortalSettings,
+  getSystemUsers,
+  getNotificationsForUser,
+  getNotificationPreferences,
+  NOTIFICATIONS_UPDATED_EVENT,
+} from '../../utils/portalStorage';
 import type { UserRole } from '../../types';
 
 interface NavItem {
@@ -39,6 +46,32 @@ export const DashboardLayout: React.FC<{ children?: React.ReactNode }> = ({ chil
   });
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [isSidebarHovered, setIsSidebarHovered] = useState(false);
+  const [notifsEnabled, setNotifsEnabled] = useState<boolean>(
+    () => getNotificationPreferences(currentUser?.email).enabled
+  );
+  const [unreadCount, setUnreadCount] = useState<number>(() =>
+    getNotificationsForUser(currentUser?.role, currentUser?.email).filter((n) => !n.isRead).length
+  );
+
+  useEffect(() => {
+    const refreshNotifState = () => {
+      const prefs = getNotificationPreferences(currentUser?.email);
+      setNotifsEnabled(prefs.enabled);
+      setUnreadCount(
+        prefs.enabled
+          ? getNotificationsForUser(currentUser?.role, currentUser?.email).filter((n) => !n.isRead)
+              .length
+          : 0
+      );
+    };
+    refreshNotifState();
+    window.addEventListener(NOTIFICATIONS_UPDATED_EVENT, refreshNotifState);
+    window.addEventListener('storage', refreshNotifState);
+    return () => {
+      window.removeEventListener(NOTIFICATIONS_UPDATED_EVENT, refreshNotifState);
+      window.removeEventListener('storage', refreshNotifState);
+    };
+  }, [currentUser?.role, currentUser?.email]);
 
   useEffect(() => {
     localStorage.setItem('ceb_sidebar_collapsed', String(isSidebarCollapsed));
@@ -245,16 +278,30 @@ export const DashboardLayout: React.FC<{ children?: React.ReactNode }> = ({ chil
             />
           </div>
 
-          {/* Notification Bell Icon with Red Badge (matching screenshot count 5) */}
+          {/* Yellow Notification Bell Icon (or Muted BellOff) with Live Unread Badge */}
           <button
             onClick={() => setIsNotifOpen(true)}
-            className="relative p-2 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition cursor-pointer"
-            title="Notifications"
+            className={`relative p-2 rounded-xl border transition cursor-pointer ${
+              notifsEnabled
+                ? 'bg-amber-50 border-amber-200/80 text-amber-500 hover:text-amber-600 hover:bg-amber-100/80'
+                : 'bg-slate-100 border-slate-200 text-slate-400 hover:text-slate-600 hover:bg-slate-200/70'
+            }`}
+            title={
+              notifsEnabled
+                ? 'Notifications (Enabled)'
+                : 'Notifications Muted — Click to turn on'
+            }
           >
-            <Bell className="w-4 h-4" />
-            <span className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-rose-500 text-white text-[9px] font-bold flex items-center justify-center ring-2 ring-white">
-              3
-            </span>
+            {notifsEnabled ? (
+              <Bell className="w-4 h-4 text-amber-500 fill-amber-400/35" />
+            ) : (
+              <BellOff className="w-4 h-4 text-slate-400" />
+            )}
+            {notifsEnabled && unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-rose-500 text-white text-[9px] font-bold flex items-center justify-center ring-2 ring-white">
+                {unreadCount}
+              </span>
+            )}
           </button>
 
           {/* User profile dropdown trigger */}
@@ -311,7 +358,9 @@ export const DashboardLayout: React.FC<{ children?: React.ReactNode }> = ({ chil
           <aside
             onMouseEnter={() => setIsSidebarHovered(true)}
             onMouseLeave={() => setIsSidebarHovered(false)}
-            className={`absolute inset-y-0 left-0 bg-white border-r border-slate-200 transition-all duration-200 ease-in-out flex flex-col justify-between h-full overflow-y-auto overflow-x-hidden z-20 ${
+            className={`absolute inset-y-0 left-0 bg-white border-r border-slate-200 transition-all duration-200 ease-in-out flex flex-col justify-between h-full overflow-x-hidden z-20 ${
+              isNotifOpen ? 'overflow-y-hidden' : 'overflow-y-auto'
+            } ${
               isSidebarOpen ? 'w-60' : 'w-16'
             } ${isSidebarCollapsed && isSidebarHovered ? 'shadow-xl' : ''}`}
           >
@@ -369,7 +418,11 @@ export const DashboardLayout: React.FC<{ children?: React.ReactNode }> = ({ chil
         </div>
 
         {/* Page Content Area */}
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+        <main
+          className={`flex-1 p-4 sm:p-6 lg:p-8 [scrollbar-gutter:stable] ${
+            isNotifOpen ? 'overflow-hidden' : 'overflow-y-auto'
+          }`}
+        >
           <div className="max-w-7xl mx-auto">{children ?? <Outlet />}</div>
         </main>
       </div>
