@@ -14,6 +14,7 @@ import {
   saveHrApplications,
   getHrVacancies,
   appendAuditLog,
+  pushNotification,
 } from '../../utils/portalStorage';
 
 export const HrShortlistPage: React.FC = () => {
@@ -122,6 +123,20 @@ export const HrShortlistPage: React.FC = () => {
     setApplications(updated);
     saveHrApplications(updated);
 
+    updated
+      .filter((a) => selectedCandidateIds.includes(a.id))
+      .forEach((cand) => {
+        pushNotification({
+          targetRole: 'APPLICANT',
+          targetEmail: cand.candidateEmail,
+          title: `Call Letter Issued (${cand.referenceNo}): ${clType} on ${clDate}`,
+          category: 'Approval',
+          statusTag: 'Shortlisted',
+          actionRequired: true,
+          actionPath: '/applicant/applications',
+        });
+      });
+
     appendAuditLog({
       actorName: 'Nimali Senanayake (HR)',
       actorRole: 'HR',
@@ -158,6 +173,28 @@ export const HrShortlistPage: React.FC = () => {
 
     setApplications(updated);
     saveHrApplications(updated);
+
+    pushNotification({
+      targetRole: 'DIRECTOR',
+      title: `${selectedCandidateIds.length} Candidate Docket(s) Forwarded by HR for Board Ratification`,
+      category: 'Approval',
+      statusTag: 'Board Decision Pending',
+      actionRequired: true,
+      actionPath: '/director/shortlisted',
+    });
+
+    updated
+      .filter((a) => selectedCandidateIds.includes(a.id))
+      .forEach((cand) => {
+        pushNotification({
+          targetRole: 'APPLICANT',
+          targetEmail: cand.candidateEmail,
+          title: `Application ${cand.referenceNo} Forwarded to CEB Director Board`,
+          category: 'Approval',
+          statusTag: 'Forwarded to Director Board',
+          actionPath: '/applicant/applications',
+        });
+      });
 
     appendAuditLog({
       actorName: boardSignOffOfficer,

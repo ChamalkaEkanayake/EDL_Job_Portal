@@ -16,7 +16,136 @@ import {
   type ApplicantApplication,
   type CandidateProfile,
 } from '../data/mockRecruitmentData';
-import type { ApplicationStatus, JobVacancy, HrApplication } from '../types';
+import type { ApplicationStatus, JobVacancy, HrApplication, UserRole } from '../types';
+
+export interface PortalNotification {
+  id: string;
+  targetRole: UserRole;
+  targetEmail?: string;
+  title: string;
+  category: 'Application' | 'Vacancy' | 'System' | 'Deadline' | 'Approval';
+  statusTag: string;
+  actionRequired?: boolean;
+  actionPath?: string;
+  timestamp: string;
+  isRead: boolean;
+}
+
+export const NOTIFICATIONS_UPDATED_EVENT = 'ceb-notifications-updated';
+
+const DEFAULT_PORTAL_NOTIFICATIONS: PortalNotification[] = [
+  // Applicant
+  {
+    id: 'notif-app-1',
+    targetRole: 'APPLICANT',
+    title: 'Document Verification Required: Upload JP-certified Degree copy (CEB-2026-CE12)',
+    category: 'Application',
+    statusTag: 'Action Required',
+    actionRequired: true,
+    actionPath: '/applicant/applications',
+    timestamp: '11/25/2026, 2:15 PM',
+    isRead: false,
+  },
+  {
+    id: 'notif-app-2',
+    targetRole: 'APPLICANT',
+    title: 'Written Exam Call Letter Ready: Systems & Network Engineer (CEB-2026-IT09)',
+    category: 'Approval',
+    statusTag: 'Shortlisted',
+    actionRequired: true,
+    actionPath: '/applicant/applications',
+    timestamp: '11/25/2026, 11:20 AM',
+    isRead: false,
+  },
+  {
+    id: 'notif-app-3',
+    targetRole: 'APPLICANT',
+    title: 'Application Ref #CEB-2026-EE04 received and under HR scrutiny',
+    category: 'Application',
+    statusTag: 'Under HR Review',
+    actionPath: '/applicant/applications',
+    timestamp: '11/23/2026, 2:39 PM',
+    isRead: true,
+  },
+  // HR Staff
+  {
+    id: 'notif-hr-1',
+    targetRole: 'HR',
+    title: 'New Application Pending Scrutiny: Thilina Perera (CEB-2026-DS06)',
+    category: 'Application',
+    statusTag: 'Pending Scrutiny',
+    actionRequired: true,
+    actionPath: '/hr/applications',
+    timestamp: '11/26/2026, 10:12 AM',
+    isRead: false,
+  },
+  {
+    id: 'notif-hr-2',
+    targetRole: 'HR',
+    title: '2 Shortlisted Candidates Ready for Exam Marks & Board Forwarding',
+    category: 'Vacancy',
+    statusTag: 'Shortlist Queue',
+    actionRequired: true,
+    actionPath: '/hr/shortlist',
+    timestamp: '11/25/2026, 4:05 PM',
+    isRead: false,
+  },
+  {
+    id: 'notif-hr-3',
+    targetRole: 'HR',
+    title: 'Director Board Ratified Appointment: Lasith Karunaratne (CEB-2026-FN05)',
+    category: 'Approval',
+    statusTag: 'Board Approved',
+    actionPath: '/hr/applications',
+    timestamp: '11/24/2026, 5:10 PM',
+    isRead: true,
+  },
+  // Director Board
+  {
+    id: 'notif-dir-1',
+    targetRole: 'DIRECTOR',
+    title: '2 Recommended Candidate Dockets Awaiting Final Board Approval',
+    category: 'Approval',
+    statusTag: 'Board Decision Pending',
+    actionRequired: true,
+    actionPath: '/director/shortlisted',
+    timestamp: '11/26/2026, 1:45 PM',
+    isRead: false,
+  },
+  {
+    id: 'notif-dir-2',
+    targetRole: 'DIRECTOR',
+    title: 'Finance Division Merit Memo Submitted by HR Panel (CEB-2026-FN02)',
+    category: 'Application',
+    statusTag: 'HR Memo Ready',
+    actionRequired: true,
+    actionPath: '/director/shortlisted',
+    timestamp: '11/25/2026, 3:20 PM',
+    isRead: false,
+  },
+  // System Admin
+  {
+    id: 'notif-adm-1',
+    targetRole: 'ADMIN',
+    title: 'Security Alert: Rate-limiter cooldown triggered on hr@ceb.lk (5 failed attempts)',
+    category: 'System',
+    statusTag: 'Security Warning',
+    actionRequired: true,
+    actionPath: '/admin/dashboard',
+    timestamp: '11/25/2026, 9:03 AM',
+    isRead: false,
+  },
+  {
+    id: 'notif-adm-2',
+    targetRole: 'ADMIN',
+    title: 'Recruitment Cycle 2026/2027 Policy & Template Configuration Active',
+    category: 'System',
+    statusTag: 'System Notice',
+    actionPath: '/admin/departments',
+    timestamp: '11/24/2026, 2:00 PM',
+    isRead: true,
+  },
+];
 
 export const STORAGE_KEYS = {
   SYSTEM_USERS: 'ceb_admin_system_users',
@@ -27,7 +156,61 @@ export const STORAGE_KEYS = {
   HR_VACANCIES: 'ceb_hr_vacancies',
   HR_APPLICATIONS: 'ceb_hr_applications',
   APPLICANT_APPLICATIONS: 'ceb_applicant_applications',
+  PORTAL_NOTIFICATIONS: 'ceb_portal_notifications',
+  NOTIFICATION_PREFERENCES: 'ceb_notification_preferences',
 } as const;
+
+export interface NotificationPreferences {
+  enabled: boolean;
+  applicationUpdates: boolean;
+  vacancyAlerts: boolean;
+  systemNotices: boolean;
+}
+
+export const DEFAULT_NOTIFICATION_PREFS: NotificationPreferences = {
+  enabled: true,
+  applicationUpdates: true,
+  vacancyAlerts: true,
+  systemNotices: true,
+};
+
+function getPrefStorageKey(email?: string): string {
+  const clean = email?.trim().toLowerCase();
+  return clean
+    ? `${STORAGE_KEYS.NOTIFICATION_PREFERENCES}_${clean}`
+    : STORAGE_KEYS.NOTIFICATION_PREFERENCES;
+}
+
+export function getNotificationPreferences(email?: string): NotificationPreferences {
+  return {
+    ...DEFAULT_NOTIFICATION_PREFS,
+    ...readJson<Partial<NotificationPreferences>>(
+      getPrefStorageKey(email),
+      DEFAULT_NOTIFICATION_PREFS
+    ),
+  };
+}
+
+export function saveNotificationPreferences(
+  prefs: NotificationPreferences,
+  email?: string
+): void {
+  writeJson(getPrefStorageKey(email), prefs);
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new Event(NOTIFICATIONS_UPDATED_EVENT));
+  }
+}
+
+export function isCategoryEnabled(
+  category: PortalNotification['category'],
+  prefs: NotificationPreferences
+): boolean {
+  if (!prefs.enabled) return false;
+  if (category === 'Vacancy') return prefs.vacancyAlerts;
+  if (category === 'System') return prefs.systemNotices;
+  if (category === 'Application' || category === 'Approval') return prefs.applicationUpdates;
+  return true;
+}
 
 function readJson<T>(key: string, fallback: T): T {
   try {
@@ -260,6 +443,24 @@ export function submitApplicantApplication(input: SubmitApplicationInput): {
   const currentHrApps = getHrApplications();
   saveHrApplications([hrApp, ...currentHrApps]);
 
+  pushNotification({
+    targetRole: 'HR',
+    title: `New Application Submitted: ${input.candidateName} (${referenceNo})`,
+    category: 'Application',
+    statusTag: 'Pending Scrutiny',
+    actionRequired: true,
+    actionPath: '/hr/applications',
+  });
+
+  pushNotification({
+    targetRole: 'APPLICANT',
+    targetEmail: input.candidateEmail,
+    title: `Application Ref #${referenceNo} submitted for ${input.vacancy.title}`,
+    category: 'Application',
+    statusTag: 'Submitted',
+    actionPath: '/applicant/applications',
+  });
+
   appendAuditLog({
     actorName: input.candidateName,
     actorRole: 'APPLICANT',
@@ -338,6 +539,15 @@ export function resubmitApplicantDocuments(
     });
     saveHrApplications(updatedHrApps);
 
+    pushNotification({
+      targetRole: 'HR',
+      title: `Clarification Document Uploaded: ${target.referenceNo} (${uploadedFile})`,
+      category: 'Application',
+      statusTag: 'Ready for Re-verification',
+      actionRequired: true,
+      actionPath: '/hr/applications',
+    });
+
     appendAuditLog({
       actorName,
       actorRole: 'APPLICANT',
@@ -406,5 +616,115 @@ export function appendAuditLog(
   };
   const next = [nextEntry, ...current];
   writeJson(STORAGE_KEYS.AUDIT_LOGS, next);
+
+  if (entry.severity === 'WARNING' || entry.severity === 'CRITICAL') {
+    pushNotification({
+      targetRole: 'ADMIN',
+      title: `${entry.action}: ${entry.target}`,
+      category: 'System',
+      statusTag: entry.severity === 'CRITICAL' ? 'Critical Alert' : 'Security Warning',
+      actionRequired: true,
+      actionPath: '/admin/dashboard',
+    });
+  }
+
   return next;
+}
+
+function getAllNotifications(): PortalNotification[] {
+  return readJson<PortalNotification[]>(
+    STORAGE_KEYS.PORTAL_NOTIFICATIONS,
+    DEFAULT_PORTAL_NOTIFICATIONS
+  );
+}
+
+function saveAllNotifications(list: PortalNotification[]): void {
+  writeJson(STORAGE_KEYS.PORTAL_NOTIFICATIONS, list);
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new Event(NOTIFICATIONS_UPDATED_EVENT));
+  }
+}
+
+export function getNotificationsForUser(
+  role?: UserRole,
+  email?: string
+): PortalNotification[] {
+  if (!role) return [];
+  const cleanEmail = email?.trim().toLowerCase();
+  const prefs = getNotificationPreferences(email);
+  return getAllNotifications().filter(
+    (n) =>
+      n.targetRole === role &&
+      (!n.targetEmail || !cleanEmail || n.targetEmail.toLowerCase() === cleanEmail) &&
+      (!prefs.enabled || isCategoryEnabled(n.category, prefs))
+  );
+}
+
+export function pushNotification(
+  input: Omit<PortalNotification, 'id' | 'timestamp' | 'isRead'>
+): void {
+  const settings = getPortalSettings();
+  if (
+    input.targetRole === 'APPLICANT' &&
+    !settings.automatedCandidateAlerts &&
+    !input.actionRequired
+  ) {
+    return;
+  }
+
+  // Respect per-user mute / category settings when targeted or currently active
+  const targetPrefs = getNotificationPreferences(input.targetEmail);
+  if (input.targetEmail && !isCategoryEnabled(input.category, targetPrefs)) {
+    return;
+  }
+
+  const nextItem: PortalNotification = {
+    ...input,
+    id: `notif-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+    timestamp: new Date().toLocaleString('en-US', {
+      month: 'numeric',
+      day: 'numeric',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+    }),
+    isRead: false,
+  };
+  saveAllNotifications([nextItem, ...getAllNotifications()]);
+}
+
+export function markNotificationRead(id: string): void {
+  const updated = getAllNotifications().map((n) =>
+    n.id === id ? { ...n, isRead: true } : n
+  );
+  saveAllNotifications(updated);
+}
+
+export function removeNotificationById(id: string): void {
+  const updated = getAllNotifications().filter((n) => n.id !== id);
+  saveAllNotifications(updated);
+}
+
+export function markAllNotificationsReadForUser(role?: UserRole, email?: string): void {
+  if (!role) return;
+  const cleanEmail = email?.trim().toLowerCase();
+  const updated = getAllNotifications().map((n) => {
+    const matches =
+      n.targetRole === role &&
+      (!n.targetEmail || !cleanEmail || n.targetEmail.toLowerCase() === cleanEmail);
+    return matches ? { ...n, isRead: true } : n;
+  });
+  saveAllNotifications(updated);
+}
+
+export function clearNotificationsForUser(role?: UserRole, email?: string): void {
+  if (!role) return;
+  const cleanEmail = email?.trim().toLowerCase();
+  const updated = getAllNotifications().filter((n) => {
+    const matches =
+      n.targetRole === role &&
+      (!n.targetEmail || !cleanEmail || n.targetEmail.toLowerCase() === cleanEmail);
+    return !matches;
+  });
+  saveAllNotifications(updated);
 }

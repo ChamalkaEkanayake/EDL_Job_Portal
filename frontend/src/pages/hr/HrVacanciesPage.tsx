@@ -15,7 +15,12 @@ import {
 } from 'lucide-react';
 
 import type { JobVacancy } from '../../types';
-import { getHrVacancies, saveHrVacancies, appendAuditLog } from '../../utils/portalStorage';
+import {
+  getHrVacancies,
+  saveHrVacancies,
+  appendAuditLog,
+  pushNotification,
+} from '../../utils/portalStorage';
 
 export const HrVacanciesPage: React.FC = () => {
   const [vacancies, setVacancies] = useState<JobVacancy[]>(() => getHrVacancies());
@@ -184,6 +189,15 @@ export const HrVacanciesPage: React.FC = () => {
 
     setVacancies(updated);
     saveHrVacancies(updated);
+    if (!editingVacancy && formStatus === 'PUBLISHED') {
+      pushNotification({
+        targetRole: 'APPLICANT',
+        title: `New Vacancy Published: ${formTitle} (${formDept})`,
+        category: 'Vacancy',
+        statusTag: 'Open for Apply',
+        actionPath: '/applicant/vacancies',
+      });
+    }
     setIsModalOpen(false);
   };
 
@@ -194,6 +208,16 @@ export const HrVacanciesPage: React.FC = () => {
     const updated = vacancies.map((v) => (v.id === vac.id ? { ...v, status: nextStatus } : v));
     setVacancies(updated);
     saveHrVacancies(updated);
+
+    if (nextStatus === 'PUBLISHED') {
+      pushNotification({
+        targetRole: 'APPLICANT',
+        title: `Vacancy Re-opened: ${vac.title} (${vac.jobCode})`,
+        category: 'Vacancy',
+        statusTag: 'Open for Apply',
+        actionPath: '/applicant/vacancies',
+      });
+    }
 
     appendAuditLog({
       actorName: 'Nimali Senanayake (HR)',

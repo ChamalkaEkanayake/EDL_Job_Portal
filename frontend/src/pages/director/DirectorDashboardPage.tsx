@@ -26,6 +26,7 @@ import {
   getHrApplications,
   saveHrApplications,
   appendAuditLog,
+  pushNotification,
 } from '../../utils/portalStorage';
 import { useAuth } from '../../contexts/AuthContext';
 import type { HrApplication } from '../../types';
@@ -112,6 +113,22 @@ export const DirectorDashboardPage: React.FC = () => {
     saveHrApplications(updated);
 
     if (target) {
+      pushNotification({
+        targetRole: 'APPLICANT',
+        targetEmail: target.candidateEmail,
+        title: `Board Decision (${target.referenceNo}): Your application is ${decision}`,
+        category: 'Approval',
+        statusTag: decision,
+        actionRequired: decision === 'Approved',
+        actionPath: '/applicant/applications',
+      });
+      pushNotification({
+        targetRole: 'HR',
+        title: `Director Board ${decision} ${target.candidateName} (${target.referenceNo})`,
+        category: 'Approval',
+        statusTag: `Board ${decision}`,
+        actionPath: '/hr/applications',
+      });
       appendAuditLog({
         actorName: currentUser?.name || 'Director Board Member',
         actorRole: currentUser?.role || 'DIRECTOR',
