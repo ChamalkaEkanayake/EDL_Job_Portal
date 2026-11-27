@@ -20,9 +20,14 @@ import {
   FileCheck2,
   Info,
 } from 'lucide-react';
-import { MOCK_APPLICATIONS, type ApplicantApplication } from '../../data/mockRecruitmentData';
+import { type ApplicantApplication } from '../../data/mockRecruitmentData';
 import { useAuth } from '../../contexts/AuthContext';
-import { getPortalSettings } from '../../utils/portalStorage';
+import {
+  getPortalSettings,
+  getApplicantApplications,
+  resubmitApplicantDocuments,
+  withdrawApplicantApplication,
+} from '../../utils/portalStorage';
 import type { ApplicationStatus } from '../../types';
 
 type FilterTab = 'ALL' | 'IN_REVIEW' | 'ACTION_REQUIRED' | 'SHORTLISTED_BOARD' | 'COMPLETED';
@@ -96,7 +101,9 @@ const matchesFilterTab = (status: ApplicationStatus, tab: FilterTab): boolean =>
 export const MyApplicationsPage: React.FC = () => {
   const { currentUser } = useAuth();
   const portalSettings = getPortalSettings();
-  const [applications, setApplications] = useState<ApplicantApplication[]>(MOCK_APPLICATIONS);
+  const [applications, setApplications] = useState<ApplicantApplication[]>(() =>
+    getApplicantApplications(currentUser?.email)
+  );
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<FilterTab>('ALL');
   const [feedbackBanner, setFeedbackBanner] = useState<string | null>(null);
@@ -162,35 +169,14 @@ export const MyApplicationsPage: React.FC = () => {
     if (!resubmitApp) return;
 
     const uploadedFile = selectedDocFile.trim() || 'Certified_Degree_Copy_JP.pdf';
-    const nowLabel = '2026-11-25 02:20 PM';
-
-    setApplications((prev) =>
-      prev.map((app) => {
-        if (app.id !== resubmitApp.id) return app;
-        const updatedTimeline = [
-          ...(app.timeline || []),
-          {
-            id: `tl-${Date.now()}`,
-            date: nowLabel,
-            status: 'Under HR Review' as ApplicationStatus,
-            title: 'Requested Document Re-submitted',
-            note: applicantNote.trim()
-              ? `Uploaded ${uploadedFile}. Applicant note: "${applicantNote.trim()}"`
-              : `Uploaded ${uploadedFile} for HR re-verification.`,
-            actor: currentUser?.name || 'Applicant',
-          },
-        ];
-        return {
-          ...app,
-          status: 'Under HR Review',
-          statusRemark: `Updated document (${uploadedFile}) submitted; queued for HR verification.`,
-          documentsSubmitted: app.documentsSubmitted.includes(uploadedFile)
-            ? app.documentsSubmitted
-            : [...app.documentsSubmitted, uploadedFile],
-          timeline: updatedTimeline,
-        };
-      })
+    const updated = resubmitApplicantDocuments(
+      resubmitApp.id,
+      uploadedFile,
+      applicantNote,
+      currentUser?.name || 'Applicant',
+      currentUser?.email
     );
+    setApplications(updated);
 
     showToast(
       `Document "${uploadedFile}" submitted for ${resubmitApp.referenceNo}. Status updated to Under HR Review.`
@@ -200,7 +186,12 @@ export const MyApplicationsPage: React.FC = () => {
 
   const handleWithdrawApplication = (appId: string) => {
     const target = applications.find((a) => a.id === appId);
-    setApplications((prev) => prev.filter((a) => a.id !== appId));
+    const updated = withdrawApplicantApplication(
+      appId,
+      currentUser?.email,
+      currentUser?.name
+    );
+    setApplications(updated);
     setConfirmWithdrawId(null);
     setDetailApp(null);
     if (target) {

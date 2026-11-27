@@ -21,13 +21,24 @@ import {
   Megaphone,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
-import { MOCK_APPLICATIONS, MOCK_VACANCIES } from '../../data/mockRecruitmentData';
-import { getPortalSettings } from '../../utils/portalStorage';
+import { type ApplicantApplication } from '../../data/mockRecruitmentData';
+import {
+  getPortalSettings,
+  getHrVacancies,
+  getApplicantApplications,
+  submitApplicantApplication,
+} from '../../utils/portalStorage';
 import type { JobVacancy } from '../../types';
 
 export const ApplicantDashboard: React.FC = () => {
   const { currentUser } = useAuth();
-  const [selectedApplication, setSelectedApplication] = useState(MOCK_APPLICATIONS[0]);
+  const [applications, setApplications] = useState<ApplicantApplication[]>(() =>
+    getApplicantApplications(currentUser?.email)
+  );
+  const openVacancies = getHrVacancies().filter((v) => v.status === 'PUBLISHED');
+  const [selectedApplication, setSelectedApplication] = useState<ApplicantApplication | undefined>(
+    applications[0]
+  );
   const [showApplyModal, setShowApplyModal] = useState(false);
   const [activeVacancyToApply, setActiveVacancyToApply] = useState<JobVacancy | null>(null);
   const [showGuidelineModal, setShowGuidelineModal] = useState(false);
@@ -342,7 +353,7 @@ export const ApplicantDashboard: React.FC = () => {
               </div>
             </div>
             <div className="text-2xl font-black text-slate-900 leading-tight">
-              {MOCK_APPLICATIONS.length}
+              {applications.length}
             </div>
             <p className="text-xs text-slate-500 mt-1">
               Active in 2026 recruitment cycle
@@ -403,7 +414,7 @@ export const ApplicantDashboard: React.FC = () => {
 
             {/* Application selector tabs */}
             <div className="flex flex-wrap gap-2">
-              {MOCK_APPLICATIONS.map((app) => (
+              {applications.map((app) => (
                 <button
                   key={app.id}
                   onClick={() => setSelectedApplication(app)}
@@ -563,12 +574,12 @@ export const ApplicantDashboard: React.FC = () => {
               </p>
             </div>
             <span className="text-xs font-bold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-lg">
-              {MOCK_VACANCIES.length} Vacancies Open
+              {openVacancies.length} Vacancies Open
             </span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {MOCK_VACANCIES.map((vac) => (
+            {openVacancies.map((vac) => (
               <div
                 key={vac.id}
                 className="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-2xs hover:border-sky-300 hover:shadow-xs transition flex flex-col justify-between"
@@ -758,10 +769,16 @@ export const ApplicantDashboard: React.FC = () => {
               </button>
               <button
                 onClick={() => {
+                  const { referenceNo, applicantApp } = submitApplicantApplication({
+                    vacancy: activeVacancyToApply,
+                    candidateName: currentUser?.name || 'Chamalka Ekanayaka',
+                    candidateEmail: currentUser?.email || 'applicant@ceb.lk',
+                  });
+                  const refreshed = getApplicantApplications(currentUser?.email);
+                  setApplications(refreshed);
+                  setSelectedApplication(applicantApp);
                   alert(
-                    `Application submitted successfully for ${activeVacancyToApply.title}! Ref No: #CEB-2026-${Math.floor(
-                      1000 + Math.random() * 9000
-                    )}`
+                    `Application submitted successfully for ${activeVacancyToApply.title}! Ref No: #${referenceNo}`
                   );
                   setShowApplyModal(false);
                 }}

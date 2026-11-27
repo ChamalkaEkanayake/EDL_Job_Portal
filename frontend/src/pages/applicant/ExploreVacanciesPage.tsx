@@ -15,21 +15,26 @@ import {
   ArrowLeft,
 } from 'lucide-react';
 
-import { MOCK_VACANCIES, MOCK_APPLICATIONS } from '../../data/mockRecruitmentData';
+import {
+  getHrVacancies,
+  getApplicantApplications,
+  submitApplicantApplication,
+} from '../../utils/portalStorage';
 import { useAuth } from '../../contexts/AuthContext';
 import type { JobVacancy } from '../../types';
 
 export const ExploreVacanciesPage: React.FC = () => {
   const { currentUser } = useAuth();
+  const vacancies = useMemo(() => getHrVacancies(), []);
 
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDepartment, setSelectedDepartment] = useState<string>('All');
   const [selectedType, setSelectedType] = useState<string>('All');
 
-  // Track applied vacancy IDs (initialized from mock applications)
-  const [appliedVacancyIds, setAppliedVacancyIds] = useState<string[]>(
-    MOCK_APPLICATIONS.map((app) => app.vacancyId)
+  // Track applied vacancy IDs (initialized from persisted applications)
+  const [appliedVacancyIds, setAppliedVacancyIds] = useState<string[]>(() =>
+    getApplicantApplications(currentUser?.email).map((app) => app.vacancyId)
   );
 
   // Modal state: viewing details vs applying vs submitted confirmation
@@ -45,12 +50,12 @@ export const ExploreVacanciesPage: React.FC = () => {
   const [agreed, setAgreed] = useState(true);
 
   const departments = useMemo(() => {
-    const depts = Array.from(new Set(MOCK_VACANCIES.map((v) => v.department)));
+    const depts = Array.from(new Set(vacancies.map((v) => v.department)));
     return ['All', ...depts];
-  }, []);
+  }, [vacancies]);
 
   const filteredVacancies = useMemo(() => {
-    return MOCK_VACANCIES.filter((vac) => {
+    return vacancies.filter((vac) => {
       if (vac.status !== 'PUBLISHED') return false;
       const matchesSearch =
         vac.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -61,7 +66,7 @@ export const ExploreVacanciesPage: React.FC = () => {
       const matchesType = selectedType === 'All' || vac.employmentType === selectedType;
       return matchesSearch && matchesDept && matchesType;
     });
-  }, [searchQuery, selectedDepartment, selectedType]);
+  }, [vacancies, searchQuery, selectedDepartment, selectedType]);
 
   const openVacancyModal = (vacancy: JobVacancy, startInApply = false) => {
     setActiveVacancy(vacancy);
@@ -79,8 +84,16 @@ export const ExploreVacanciesPage: React.FC = () => {
     e.preventDefault();
     if (!activeVacancy || !agreed) return;
 
-    const newRef = `CEB-2026-${Math.floor(1000 + Math.random() * 9000)}`;
-    setSubmittedRef(newRef);
+    const docs = [uploadedCvName, extraDocName].filter((d) => Boolean(d && d.trim()));
+    const { referenceNo } = submitApplicantApplication({
+      vacancy: activeVacancy,
+      candidateName: currentUser?.name || 'Chamalka Ekanayaka',
+      candidateEmail: currentUser?.email || 'applicant@ceb.lk',
+      qualificationSummary,
+      experienceYears: Number(experienceYears) || 0,
+      documentsSubmitted: docs,
+    });
+    setSubmittedRef(referenceNo);
     setAppliedVacancyIds((prev) =>
       prev.includes(activeVacancy.id) ? prev : [...prev, activeVacancy.id]
     );
@@ -140,11 +153,10 @@ export const ExploreVacanciesPage: React.FC = () => {
                 key={dept}
                 type="button"
                 onClick={() => setSelectedDepartment(dept)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
-                  isActive
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${isActive
                     ? 'bg-slate-900 text-white shadow-2xs'
                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200/80'
-                }`}
+                  }`}
               >
                 {dept}
               </button>

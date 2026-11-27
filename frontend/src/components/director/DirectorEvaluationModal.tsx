@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   X,
   User,
@@ -35,17 +35,32 @@ export const DirectorEvaluationModal: React.FC<DirectorEvaluationModalProps> = (
   onDecision,
   onToast,
 }) => {
-  const [boardRemarks, setBoardRemarks] = useState('');
+  if (!application) return null;
+
+  return (
+    <DirectorEvaluationModalContent
+      key={application.id}
+      application={application}
+      onClose={onClose}
+      onDecision={onDecision}
+      onToast={onToast}
+    />
+  );
+};
+
+const DirectorEvaluationModalContent: React.FC<{
+  application: HrApplication;
+  onClose: () => void;
+  onDecision?: (
+    applicationId: string,
+    decision: 'Approved' | 'Rejected',
+    boardRemarks: string
+  ) => void;
+  onToast?: (message: string) => void;
+}> = ({ application, onClose, onDecision, onToast }) => {
+  const [boardRemarks, setBoardRemarks] = useState(application.boardRemarks || '');
   const [pendingAction, setPendingAction] = useState<'Approved' | 'Rejected' | null>(null);
   const [validationError, setValidationError] = useState('');
-
-  useEffect(() => {
-    setBoardRemarks(application?.boardRemarks || '');
-    setPendingAction(null);
-    setValidationError('');
-  }, [application]);
-
-  if (!application) return null;
 
   const canDecide = application.status === 'Forwarded to Director Board' && Boolean(onDecision);
   const totalMarks = (application.examMarks || 0) + (application.interviewMarks || 0);
